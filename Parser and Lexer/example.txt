@@ -1,0 +1,60 @@
+class Factorial {
+      public static void main( String[] a ) {
+            System.out.println(1);
+      }
+}
+ //this comment will be ignored
+class Fac {
+int num_aux;
+      public int ComputeFac() {
+		if( num < 1 )
+                  num_aux = 1;
+		else
+                  num_aux = num * 3;
+            return num_aux;
+      }
+	  
+	  public int ComputeFac() {
+		if( num < 1 )
+                  num_aux = 1;
+		else
+                  num_aux = num * 3;
+            return num_aux;
+      }
+}
+
+class secondClass {
+int[] testArray;
+
+
+      public TestObject ComputeFac() {
+		if( this.length < 1 )
+                  num_aux = 1;
+		else
+                  num_aux = num - 6;
+            return num_aux;
+      }
+	  
+	  public int testStatements(int argument, boolean secondargument) {
+		boolean testBoolean;
+		
+		System.out.println(thing.length);
+		while(var && num < 2)
+		variable = number*8+2;
+		
+		
+		
+		
+		{
+		thisCode = inABlock;
+		testBoolean = !false;
+		testArray = new int[5];
+		}
+		
+		variable = new Object().ComputeFac( 10);
+		
+		return something;
+		
+		
+      }
+}

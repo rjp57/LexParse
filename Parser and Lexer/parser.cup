@@ -1,0 +1,165 @@
+import java_cup.runtime.Symbol;
+import java.util.*;
+import syntaxtree.*;
+
+scan with {: return lexer.next_token(); :};
+
+parser code {:
+MiniJavaLexer lexer;
+
+public MiniJavaParser(MiniJavaLexer lex){
+	super(lex);
+	lexer = lex;
+	}
+	
+:}
+
+
+terminal PUBLIC;
+terminal STATIC;
+terminal VOID;
+terminal MAIN;
+terminal STRING;
+terminal CLASS;
+terminal EXTENDS;
+terminal SEMICOLON;
+terminal INT;
+terminal BOOLEAN;
+terminal IF;
+terminal WHILE;
+terminal ELSE;
+terminal PRINT;
+terminal TRUE;
+terminal FALSE;
+terminal LENGTH;
+terminal THIS;
+terminal NEW;
+terminal RETURN;
+terminal Integer INTEGERLITERAL;
+terminal EQUALS;
+terminal PLUS;
+terminal MINUS;
+terminal TIMES;
+terminal LESSTHAN;
+terminal AND;
+terminal DOT;
+terminal NOT;
+terminal COMMA;
+terminal CLOSEBRACE;
+terminal OPENBRACE;
+terminal CLOSEPAREN;
+terminal OPENPAREN;
+terminal CLOSEBRACKET;
+terminal OPENBRACKET;
+terminal Identifier IDENTIFIER;
+
+
+
+non terminal Program validProgram;
+
+non terminal Exp Exp;
+non terminal ExpList ExpList;
+
+non terminal ClassDecl ClassDecl;
+non terminal ClassDeclList ClassDeclList;
+
+non terminal VarDecl VarDecl;
+non terminal VarDeclList VarDeclList;
+
+non terminal MethodDecl MethodDecl;
+non terminal MethodDeclList MethodDeclList;
+
+non terminal Formal Formal;
+non terminal FormalList FormalList;
+
+
+non terminal Statement Statement;
+non terminal StatementList StatementList;
+
+non terminal Type Type;
+non terminal MainClass MainClass;
+
+
+
+precedence left AND;
+precedence left LESSTHAN;
+precedence left PLUS, MINUS;
+precedence left TIMES;
+precedence left OPENBRACKET;
+precedence left NOT;
+
+start with validProgram;
+
+validProgram ::= MainClass:m ClassDeclList:l {: RESULT = new Program(m, l); :};
+
+MainClass ::= CLASS IDENTIFIER:i1 OPENBRACE PUBLIC STATIC VOID MAIN OPENPAREN STRING OPENBRACKET CLOSEBRACKET IDENTIFIER:i2 CLOSEPAREN OPENBRACE Statement:s CLOSEBRACE CLOSEBRACE {: RESULT = new MainClass(i1, i2, s); :};
+
+ClassDeclList ::= ClassDeclList:l ClassDecl:d {: l.addElement(d); RESULT = l; :}
+		| {: RESULT = new ClassDeclList(); :}
+		;
+		
+ClassDecl ::= CLASS IDENTIFIER:i1 OPENBRACE VarDeclList:v MethodDeclList:m CLOSEBRACE {: RESULT = new ClassDeclSimple(i1, v, m); :}
+		| CLASS IDENTIFIER:i1 OPENPAREN EXTENDS IDENTIFIER:i2 CLOSEPAREN OPENBRACE VarDeclList:v MethodDeclList:m CLOSEBRACE {: RESULT = new ClassDeclExtends(i1, i2, v, m); :}
+		;
+		
+VarDeclList ::= VarDeclList:l VarDecl:d {: l.addElement(d); RESULT = l; :}
+		| {: RESULT = new VarDeclList(); :}
+		;
+		
+VarDecl ::= Type:t IDENTIFIER:i SEMICOLON {: RESULT = new VarDecl(t, i); :};
+
+MethodDeclList ::= MethodDeclList:l MethodDecl:d {: l.addElement(d); RESULT = l; :}
+		| {: RESULT = new MethodDeclList(); :}
+		;
+
+MethodDecl ::= PUBLIC Type:t IDENTIFIER:i1 OPENPAREN FormalList:l CLOSEPAREN OPENBRACE VarDeclList:v StatementList:s RETURN Exp:e SEMICOLON CLOSEBRACE {: RESULT = new MethodDecl(t, i1, l, v, s, e); :};
+
+Formal ::= Type:t IDENTIFIER:i {: RESULT = new Formal(t,i); :}
+	| Type:t IDENTIFIER:i COMMA {: RESULT = new Formal(t,i); :}
+	;
+
+FormalList ::= FormalList:l Formal:f {: l.addElement(f); RESULT = l; :}
+		|	{: RESULT = new FormalList(); :}
+		;
+
+Type ::= INT OPENBRACKET CLOSEBRACKET {: RESULT = new IntArrayType(); :}
+	| BOOLEAN {: RESULT = new BooleanType(); :}
+	| INT {: RESULT = new IntegerType(); :}
+	| IDENTIFIER:i {: RESULT = new IdentifierType(i.toString()); :}
+	;
+	
+StatementList ::= Statement:s StatementList:l   {: l.addElement(s); RESULT = l; :}
+		| {: RESULT = new StatementList(); :}
+		;
+
+Statement ::= OPENBRACE StatementList:l CLOSEBRACE {: RESULT = new Block(l); :}
+		| IF OPENPAREN Exp:e CLOSEPAREN Statement:s1 ELSE Statement:s2 {: RESULT = new If(e, s1, s2); :}
+		| WHILE OPENPAREN Exp:e CLOSEPAREN Statement:s {: RESULT = new While(e, s); :}
+		| PRINT OPENPAREN Exp:e CLOSEPAREN SEMICOLON {: RESULT = new Print(e); :}
+		| IDENTIFIER:i EQUALS Exp:e SEMICOLON {: RESULT = new Assign(i, e); :}
+		| IDENTIFIER:i OPENBRACKET Exp:e1 CLOSEBRACKET EQUALS Exp:e2 SEMICOLON {: RESULT = new ArrayAssign(i, e1, e2); :}
+		;
+		
+ExpList ::= ExpList:l Exp:e {: l.addElement(e); RESULT = l; :}
+		| {: RESULT = new ExpList(); :}
+		;
+		
+Exp ::= Exp:e1 AND Exp:e2 {: RESULT = new And(e1, e2); :}
+	| Exp:e1 LESSTHAN Exp:e2 {: RESULT = new LessThan(e1, e2); :}
+	| Exp:e1 PLUS Exp:e2 {: RESULT = new Plus(e1, e2); :}
+	| Exp:e1 MINUS Exp:e2 {: RESULT = new Minus(e1, e2); :}
+	| Exp:e1 TIMES Exp:e2 {: RESULT = new Times(e1, e2); :}
+	| Exp:e1 OPENBRACKET Exp:e2 CLOSEBRACKET {: RESULT = new ArrayLookup(e1, e2); :}
+	| Exp:e1 DOT LENGTH {: RESULT = new ArrayLength(e1); :}
+	| Exp:e1 DOT IDENTIFIER:i OPENPAREN ExpList:l CLOSEPAREN {: RESULT = new Call(e1, i, l); :}
+	| INTEGERLITERAL:i {: RESULT = new IntegerLiteral(i); :}
+	| TRUE {: RESULT = new True(); :}
+	| FALSE {: RESULT = new False(); :}
+	| IDENTIFIER:i {: RESULT = new IdentifierExp(i.toString()); :}
+	| THIS {: RESULT = new This(); :}
+	| NEW INT OPENBRACKET Exp:e CLOSEBRACKET {: RESULT = new NewArray(e); :}
+	| NEW IDENTIFIER:i OPENPAREN CLOSEPAREN {: RESULT = new NewObject(i); :}
+	| NOT Exp:e {: RESULT = new Not(e); :}
+	| OPENPAREN Exp:e CLOSEPAREN {: RESULT = e; :}
+	| Exp:e COMMA {: RESULT = e; :}
+	;
